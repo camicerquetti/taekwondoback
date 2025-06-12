@@ -73,52 +73,45 @@ exports.registerStep2 = async (req, res) => {
   }
 };
 
+
 // Login de usuario
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validación de campos vacíos
   if (!email || !password) {
     return res.status(400).json({ message: 'Correo y contraseña son obligatorios.' });
   }
 
   try {
-    // Buscar usuario por correo
-    const [rows] = await db.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+    const [user] = await db.query('SELECT * FROM usuarios WHERE email = ?', [email]);
 
-    // Si no se encuentra el usuario
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'El correo electrónico no está registrado.' });
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    const user = rows[0];
+    const validPassword = await bcrypt.compare(password, user[0].password);
 
-    // Verificar contraseña
-    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ message: 'La contraseña ingresada es incorrecta.' });
+      return res.status(401).json({ message: 'Contraseña incorrecta.' });
     }
 
-    // Datos que se devolverán si el login es exitoso
+    // Enviar datos incluyendo el plan
     const userData = {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      role: user.role,
-      plan: user.plan,
+      id: user[0].id,
+      nombre: user[0].nombre,
+      email: user[0].email,
+      role: user[0].role,
+      plan: user[0].plan,   // Agregas el plan aquí
     };
+    
 
-    // Respuesta exitosa
-    return res.status(200).json({
-      message: 'Inicio de sesión exitoso.',
-      user: userData,
+    res.status(200).json({
+      message: 'Inicio de sesión exitoso',
+      user: userData
     });
-
   } catch (error) {
     console.error('Error en loginUser:', error);
-    return res.status(500).json({
-      message: 'No se pudo iniciar sesión. Por favor, inténtelo más tarde.',
-    });
+    res.status(500).json({ message: 'Error del servidor.' });
   }
 };
 
