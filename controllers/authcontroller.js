@@ -77,40 +77,48 @@ exports.registerStep2 = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
+  // Validación de campos vacíos
   if (!email || !password) {
     return res.status(400).json({ message: 'Correo y contraseña son obligatorios.' });
   }
 
   try {
-    const [user] = await db.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+    // Buscar usuario por correo
+    const [rows] = await db.query('SELECT * FROM usuarios WHERE email = ?', [email]);
 
-    if (user.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    // Si no se encuentra el usuario
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'El correo electrónico no está registrado.' });
     }
 
-    const validPassword = await bcrypt.compare(password, user[0].password);
+    const user = rows[0];
 
+    // Verificar contraseña
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ message: 'Contraseña incorrecta.' });
+      return res.status(401).json({ message: 'La contraseña ingresada es incorrecta.' });
     }
 
-    // Enviar datos incluyendo el plan
+    // Datos que se devolverán si el login es exitoso
     const userData = {
-      id: user[0].id,
-      nombre: user[0].nombre,
-      email: user[0].email,
-      role: user[0].role,
-      plan: user[0].plan,   // Agregas el plan aquí
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      role: user.role,
+      plan: user.plan,
     };
-    
 
-    res.status(200).json({
-      message: 'Inicio de sesión exitoso',
-      user: userData
+    // Respuesta exitosa
+    return res.status(200).json({
+      message: 'Inicio de sesión exitoso.',
+      user: userData,
     });
+
   } catch (error) {
     console.error('Error en loginUser:', error);
-    res.status(500).json({ message: 'Error del servidor.' });
+    return res.status(500).json({
+      message: 'No se pudo iniciar sesión. Por favor, inténtelo más tarde.',
+    });
   }
 };
 
