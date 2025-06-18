@@ -913,3 +913,202 @@ exports.deleteEscuela = async (req, res) => {
     return res.status(500).json({ message: 'Error al eliminar la escuela.' });
   }
 };
+// Obtener todos los contenidos, opcionalmente filtrando por tul_id
+exports.getTulContenidos = async (req, res) => {
+  try {
+    const tulId = req.query.tul_id || null;
+
+    let query = 'SELECT * FROM tul_contenidos';
+    const params = [];
+
+    if (tulId) {
+      query += ' WHERE tul_id = ?';
+      params.push(tulId);
+    }
+
+    query += ' ORDER BY orden ASC';
+
+    const [rows] = await db.query(query, params);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron contenidos.' });
+    }
+
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error en getTulContenidos:', error);
+    return res.status(500).json({ message: 'Error al obtener contenidos de tul.' });
+  }
+};
+
+
+// Obtener contenido específico por ID
+// Obtener todos los contenidos o filtrados por tul_id (query param)
+exports.getTulContenidos = async (req, res) => {
+  try {
+    const tulId = req.query.tul_id || null;
+    let query = 'SELECT * FROM tul_contenidos';
+    const params = [];
+    if (tulId) {
+      query += ' WHERE tul_id = ?';
+      params.push(tulId);
+    }
+    query += ' ORDER BY orden ASC';
+    const [rows] = await db.query(query, params);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron contenidos.' });
+    }
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error en getTulContenidos:', error);
+    return res.status(500).json({ message: 'Error al obtener contenidos de tul.' });
+  }
+};
+
+// Obtener contenido específico por id (params)
+exports.getTulContenidoById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Falta el parámetro id.' });
+    }
+    const [rows] = await db.query('SELECT * FROM tul_contenidos WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Contenido no encontrado.' });
+    }
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error('Error en getTulContenidoById:', error);
+    return res.status(500).json({ message: 'Error al obtener contenido de tul.' });
+  }
+};
+
+// Crear nuevo contenido
+exports.createTulContenido = async (req, res) => {
+  try {
+    const {
+      tul_id,
+      tipo_seccion,
+      titulo,
+      contenido_texto,
+      video_link,
+      imagen,
+      orden
+    } = req.body;
+
+    if (!tul_id || !tipo_seccion) {
+      return res.status(400).json({ message: 'tul_id y tipo_seccion son requeridos.' });
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO tul_contenidos 
+       (tul_id, tipo_seccion, titulo, contenido_texto, video_link, imagen, orden)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        tul_id,
+        tipo_seccion,
+        titulo || null,
+        contenido_texto || null,
+        video_link || null,
+        imagen || null,
+        orden || null
+      ]
+    );
+
+    const newId = result.insertId;
+    const [newRow] = await db.query('SELECT * FROM tul_contenidos WHERE id = ?', [newId]);
+
+    return res.status(201).json(newRow[0]);
+  } catch (error) {
+    console.error('Error en createTulContenido:', error);
+    return res.status(500).json({ message: 'Error al crear contenido de tul.' });
+  }
+};
+
+// Actualizar contenido existente
+exports.updateTulContenido = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Falta el parámetro id.' });
+    }
+
+    const {
+      tipo_seccion,
+      titulo,
+      contenido_texto,
+      video_link,
+      imagen,
+      orden
+    } = req.body;
+
+    const [existing] = await db.query('SELECT id FROM tul_contenidos WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'Contenido no encontrado.' });
+    }
+
+    const fields = [];
+    const params = [];
+
+    if (tipo_seccion !== undefined) {
+      fields.push('tipo_seccion = ?');
+      params.push(tipo_seccion);
+    }
+    if (titulo !== undefined) {
+      fields.push('titulo = ?');
+      params.push(titulo);
+    }
+    if (contenido_texto !== undefined) {
+      fields.push('contenido_texto = ?');
+      params.push(contenido_texto);
+    }
+    if (video_link !== undefined) {
+      fields.push('video_link = ?');
+      params.push(video_link);
+    }
+    if (imagen !== undefined) {
+      fields.push('imagen = ?');
+      params.push(imagen);
+    }
+    if (orden !== undefined) {
+      fields.push('orden = ?');
+      params.push(orden);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: 'No hay campos para actualizar.' });
+    }
+
+    const sql = `UPDATE tul_contenidos SET ${fields.join(', ')} WHERE id = ?`;
+    params.push(id);
+
+    await db.query(sql, params);
+
+    const [updated] = await db.query('SELECT * FROM tul_contenidos WHERE id = ?', [id]);
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error en updateTulContenido:', error);
+    return res.status(500).json({ message: 'Error al actualizar contenido de tul.' });
+  }
+};
+
+// Eliminar contenido
+exports.deleteTulContenido = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Falta el parámetro id.' });
+    }
+
+    const [existing] = await db.query('SELECT id FROM tul_contenidos WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'Contenido no encontrado.' });
+    }
+
+    await db.query('DELETE FROM tul_contenidos WHERE id = ?', [id]);
+    return res.json({ message: 'Contenido eliminado correctamente.' });
+  } catch (error) {
+    console.error('Error en deleteTulContenido:', error);
+    return res.status(500).json({ message: 'Error al eliminar contenido de tul.' });
+  }
+};
