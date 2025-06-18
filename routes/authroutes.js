@@ -43,6 +43,22 @@ router.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
   next();
 });
+// Rutas para tul_contenidos:
+// GET todos o filtrados por query ?tul_id=...
+router.get('/tul_contenidos', authController.getTulContenidos);
+
+// GET por ID
+router.get('/tul_contenidos/:id', authController.getTulContenidoById);
+
+// POST para crear
+router.post('/tul_contenidos', authController.createTulContenido);
+
+// PUT o PATCH para actualizar
+router.put('/tul_contenidos/:id', authController.updateTulContenido);
+// o router.patch(...)
+
+// DELETE
+router.delete('/tul_contenidos/:id', authController.deleteTulContenido);
 
 
 
