@@ -50,12 +50,12 @@ router.get('/tul_contenidos', authController.getTulContenidos);
 // GET por ID
 router.get('/tul_contenidos/:id', authController.getTulContenidoById);
 
-// POST para crear
-router.post('/tul_contenidos', authController.createTulContenido);
+// POST para crear contenido con imagen
+router.post('/tul_contenidos', upload.single('imagen'), authController.createTulContenido);
 
-// PUT o PATCH para actualizar
-router.put('/tul_contenidos/:id', authController.updateTulContenido);
-// o router.patch(...)
+// PUT para actualizar contenido con imagen
+router.put('/tul_contenidos/:id', upload.single('imagen'), authController.updateTulContenido);
+// DELETE
 
 // DELETE
 router.delete('/tul_contenidos/:id', authController.deleteTulContenido);
