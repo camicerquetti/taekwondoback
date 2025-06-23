@@ -1043,15 +1043,23 @@ exports.updateTulContenido = async (req, res) => {
     }
 
     const {
+      tul_id,
       tipo_seccion,
       titulo,
       contenido_texto,
       video_link,
-      imagen,
-      orden
+      orden,
+      movimiento_o_academia
     } = req.body;
 
-    const [existing] = await db.query('SELECT id FROM tul_contenidos WHERE id = ?', [id]);
+    // Imagen actualizada si se sube una nueva
+    let imagen = null;
+    if (req.file) {
+      imagen = req.file.filename;
+    }
+
+    // Verificar existencia
+    const [existing] = await db.query('SELECT * FROM tul_contenidos WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ message: 'Contenido no encontrado.' });
     }
@@ -1059,6 +1067,10 @@ exports.updateTulContenido = async (req, res) => {
     const fields = [];
     const params = [];
 
+    if (tul_id !== undefined) {
+      fields.push('tul_id = ?');
+      params.push(tul_id);
+    }
     if (tipo_seccion !== undefined) {
       fields.push('tipo_seccion = ?');
       params.push(tipo_seccion);
@@ -1075,13 +1087,17 @@ exports.updateTulContenido = async (req, res) => {
       fields.push('video_link = ?');
       params.push(video_link);
     }
-    if (imagen !== undefined) {
+    if (imagen !== null) {
       fields.push('imagen = ?');
       params.push(imagen);
     }
     if (orden !== undefined) {
       fields.push('orden = ?');
       params.push(orden);
+    }
+    if (movimiento_o_academia !== undefined) {
+      fields.push('movimiento_o_academia = ?');
+      params.push(movimiento_o_academia);
     }
 
     if (fields.length === 0) {
