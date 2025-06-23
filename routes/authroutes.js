@@ -59,7 +59,15 @@ router.put('/tul_contenidos/:id', upload.single('imagen'), authController.update
 
 // DELETE
 router.delete('/tul_contenidos/:id', authController.deleteTulContenido);
-
+// Ruta PUT para actualizar postura con hasta 2 imágenes
+router.put(
+  '/posturas/:id',
+  upload.fields([
+    { name: 'imagen', maxCount: 1 },
+    { name: 'imagen2', maxCount: 1 }
+  ]),
+  authController.updatePostura
+);
 
 
 
