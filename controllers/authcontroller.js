@@ -992,32 +992,35 @@ exports.createTulContenido = async (req, res) => {
       titulo,
       contenido_texto,
       video_link,
-      orden
+      orden,
+      movimiento_o_academia // <-- agregar esta línea
     } = req.body;
 
-    // Leer imagen como base64 si se subió
+    // Para la imagen: suponiendo que multer guarda en disco y tienes req.file.filename
     let imagen = null;
     if (req.file) {
-      imagen = req.file.buffer.toString('base64'); // o guardá como archivo si querés
+      imagen = req.file.filename;  // guardo solo el nombre de archivo
     }
 
-    // Validaciones
+    // Validaciones básicas
     if (!tul_id || !tipo_seccion) {
       return res.status(400).json({ message: 'tul_id y tipo_seccion son requeridos.' });
     }
 
+    // Insertar en DB, agregando movimiento_o_academia
     const [result] = await db.query(
       `INSERT INTO tul_contenidos 
-       (tul_id, tipo_seccion, titulo, contenido_texto, video_link, imagen, orden)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       (tul_id, tipo_seccion, titulo, contenido_texto, video_link, imagen, orden, movimiento_o_academia)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         tul_id,
         tipo_seccion,
         titulo || null,
         contenido_texto || null,
         video_link || null,
-        imagen || null,
-        orden || null
+        imagen,
+        orden || null,
+        movimiento_o_academia || null
       ]
     );
 
@@ -1030,6 +1033,7 @@ exports.createTulContenido = async (req, res) => {
     return res.status(500).json({ message: 'Error al crear contenido de tul.' });
   }
 };
+
 // Actualizar contenido existente
 exports.updateTulContenido = async (req, res) => {
   try {
