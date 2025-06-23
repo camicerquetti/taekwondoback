@@ -984,7 +984,6 @@ exports.getTulContenidoById = async (req, res) => {
 };
 
 // Crear nuevo contenido
-// Crear nuevo contenido
 exports.createTulContenido = async (req, res) => {
   try {
     const {
@@ -993,10 +992,16 @@ exports.createTulContenido = async (req, res) => {
       titulo,
       contenido_texto,
       video_link,
-      imagen,
       orden
     } = req.body;
 
+    // Leer imagen como base64 si se subió
+    let imagen = null;
+    if (req.file) {
+      imagen = req.file.buffer.toString('base64'); // o guardá como archivo si querés
+    }
+
+    // Validaciones
     if (!tul_id || !tipo_seccion) {
       return res.status(400).json({ message: 'tul_id y tipo_seccion son requeridos.' });
     }
@@ -1025,7 +1030,6 @@ exports.createTulContenido = async (req, res) => {
     return res.status(500).json({ message: 'Error al crear contenido de tul.' });
   }
 };
-
 // Actualizar contenido existente
 exports.updateTulContenido = async (req, res) => {
   try {
