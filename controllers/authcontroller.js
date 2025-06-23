@@ -1137,3 +1137,101 @@ exports.deleteTulContenido = async (req, res) => {
     return res.status(500).json({ message: 'Error al eliminar contenido de tul.' });
   }
 };
+// Actualizar contenido existente en la tabla posturas
+exports.updatePostura = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Falta el parámetro id.' });
+    }
+
+    const {
+      tul_id,
+      nombre,
+      descripcion,
+      orden,
+      deberes,
+      secciones,
+      coloresCinturon,
+      imagenCinturon,
+      seccionesCuerpo,
+      imagenCuerpo,
+      posicionPreparatoria,
+      imagenPosicion,
+      logotipo,
+      video,
+      imagenTul,
+      contenido
+    } = req.body;
+
+    // Manejo de imágenes subidas
+    let imagen = null;
+    let imagen2 = null;
+
+    if (req.files) {
+      if (req.files.imagen && req.files.imagen[0]) {
+        imagen = req.files.imagen[0].filename;
+      }
+      if (req.files.imagen2 && req.files.imagen2[0]) {
+        imagen2 = req.files.imagen2[0].filename;
+      }
+    }
+
+    // Verificar existencia del registro
+    const [existing] = await db.query('SELECT * FROM posturas WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'Postura no encontrada.' });
+    }
+
+    const fields = [];
+    const params = [];
+
+    // Campos normales
+    if (tul_id !== undefined) { fields.push('tul_id = ?'); params.push(tul_id); }
+    if (nombre !== undefined) { fields.push('nombre = ?'); params.push(nombre); }
+    if (descripcion !== undefined) { fields.push('descripcion = ?'); params.push(descripcion); }
+    if (orden !== undefined) { fields.push('orden = ?'); params.push(orden); }
+    if (imagen !== null) { fields.push('imagen = ?'); params.push(imagen); }
+    if (imagen2 !== null) { fields.push('imagen2 = ?'); params.push(imagen2); }
+
+    // Nuevos campos
+    if (deberes !== undefined) { fields.push('deberes = ?'); params.push(deberes); }
+
+    if (secciones !== undefined) {
+      try {
+        const parsed = typeof secciones === 'string' ? JSON.parse(secciones) : secciones;
+        fields.push('secciones = ?');
+        params.push(JSON.stringify(parsed));
+      } catch (err) {
+        return res.status(400).json({ message: 'Formato de secciones inválido. Debe ser JSON.' });
+      }
+    }
+
+    if (coloresCinturon !== undefined) { fields.push('coloresCinturon = ?'); params.push(coloresCinturon); }
+    if (imagenCinturon !== undefined) { fields.push('imagenCinturon = ?'); params.push(imagenCinturon); }
+    if (seccionesCuerpo !== undefined) { fields.push('seccionesCuerpo = ?'); params.push(seccionesCuerpo); }
+    if (imagenCuerpo !== undefined) { fields.push('imagenCuerpo = ?'); params.push(imagenCuerpo); }
+    if (posicionPreparatoria !== undefined) { fields.push('posicionPreparatoria = ?'); params.push(posicionPreparatoria); }
+    if (imagenPosicion !== undefined) { fields.push('imagenPosicion = ?'); params.push(imagenPosicion); }
+    if (logotipo !== undefined) { fields.push('logotipo = ?'); params.push(logotipo); }
+    if (video !== undefined) { fields.push('video = ?'); params.push(video); }
+    if (imagenTul !== undefined) { fields.push('imagenTul = ?'); params.push(imagenTul); }
+    if (contenido !== undefined) { fields.push('contenido = ?'); params.push(contenido); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: 'No hay campos para actualizar.' });
+    }
+
+    const sql = `UPDATE posturas SET ${fields.join(', ')} WHERE id = ?`;
+    params.push(id);
+
+    await db.query(sql, params);
+
+    const [updated] = await db.query('SELECT * FROM posturas WHERE id = ?', [id]);
+    return res.json(updated[0]);
+
+  } catch (error) {
+    console.error('Error en updatePostura:', error);
+    return res.status(500).json({ message: 'Error al actualizar postura.' });
+  }
+};
