@@ -177,8 +177,8 @@ exports.sendPasswordResetEmail = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'camilacerquetti18@gmail.com',
-    pass: 'mhbh aztv xicb hfhb',    // <- CAMBIA esto
+        user: '',
+    pass: '',    // <- CAMBIA esto
       }
     });
 
@@ -887,7 +887,7 @@ exports.createEscuela = async (req, res) => {
 
   try {
     // Paso 1: Llamada a la API de Google Maps para obtener las coordenadas (latitud y longitud)
-    const apiKey = 'AIzaSyDWmsOa6axy4YhPs1PMGSzMQBhqf4d8wyA';  // Sustituye con tu clave de API de Google Maps
+    const apiKey = '';  // Sustituye con tu clave de API de Google Maps
     const geoResponse = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
       params: {
         address: `${direccion}, ${ciudad}, ${pais}`,  // Combinamos la dirección, ciudad y país
